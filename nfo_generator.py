@@ -128,6 +128,12 @@ class NFOGenerator(QMainWindow):
             # print(video_files)
             for video_file in video_files:
                 video_file_title=video_file.split('.')[-2]
+                print(video_file_title)
+                try:
+                    video_file_title=video_file_title.split(']')[-1]
+                    video_file_title=video_file_title.split('-')[-1]
+                except:
+                    pass
                 # 尝试从文件名中提取集数
                 ep_num = self.extract_episode_number(video_file)
                 if ep_num:
@@ -160,6 +166,13 @@ class NFOGenerator(QMainWindow):
 </tvshow>"""
     
     def generate_episode_nfo(self, title, plot, season, episode, year,file_title):
+        
+        #处理文件名中的特殊字符&
+        try:
+            file_title = file_title.replace('&','-')
+        except:
+            pass
+
         return f"""<?xml version="1.0" encoding="UTF-8"?>
 <episodedetails>
     <title>{episode}. {file_title}</title>
