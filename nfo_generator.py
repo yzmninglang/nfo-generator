@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                             QMessageBox, QSpinBox, QComboBox)
 from PyQt5.QtCore import Qt
 
+
 class NFOGenerator(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -172,10 +173,14 @@ class NFOGenerator(QMainWindow):
             file_title = file_title.replace('&','-')
         except:
             pass
+        try:
+            file_title = re.sub(r'^\d+\s+', '', file_title)  # 去除开头的数字和空格
+        except:
+            pass
 
         return f"""<?xml version="1.0" encoding="UTF-8"?>
 <episodedetails>
-    <title>{episode}. {file_title}</title>
+    <title>{file_title}</title>
     <showtitle>{title}</showtitle>
     <plot>{plot}</plot>
     <season>{season}</season>
