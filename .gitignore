@@ -1,2 +1,7 @@
+*
+!*/
+!.gitignore
+!*.py
+!*.md
 ai.py
 config.py
