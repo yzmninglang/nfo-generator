@@ -193,7 +193,9 @@ class NFOGenerator(QMainWindow):
             # 检查AI选项
             use_ai = self.ai_generate_checkbox.isChecked()
             api_key = self.api_key.text()
-            api_key = global_api_key
+            #如果没有api_key输入则用默认api_key，global_api_key默认为None
+            if not api_key:
+                api_key = global_api_key
             if use_ai and (not openai or not api_key):
                 QMessageBox.warning(self, "AI功能警告", "请勾选AI功能前，确保已安装'openai'库并填写了API Key。")
                 return
