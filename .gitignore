@@ -3,5 +3,6 @@
 !.gitignore
 !*.py
 !*.md
+!*.ico
 ai.py
 config.py
