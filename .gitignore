@@ -6,3 +6,4 @@
 !*.ico
 ai.py
 config.py
+!package.bat

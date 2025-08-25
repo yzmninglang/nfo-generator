@@ -225,7 +225,7 @@ class DraggableListWidget(QListWidget):
                     target_row -= 1
                 self.insertItem(target_row, dragged_item)
                 self.setCurrentItem(dragged_item)
-                self.parent().sync_data_from_list_widget()
+                self.window().sync_data_from_list_widget()
                 
             event.accept()
             
@@ -318,10 +318,12 @@ class BatchRenamer(QMainWindow):
         remove_chars_layout.addWidget(self.remove_chars_input)
         settings_layout.addLayout(remove_chars_layout)
         regex_layout = QHBoxLayout()
-        regex_label = QLabel('正则替换:')
+        regex_label = QLabel('正则替换(无后缀):')
         self.regex_pattern = QLineEdit()
         regex_pattern_label = QLabel('模式:')
         self.regex_replace = QLineEdit()
+        self.regex_pattern.setPlaceholderText('(.*?)-(.*?)$')
+        self.regex_replace.setPlaceholderText('\\2-\\1')
         regex_replace_label = QLabel('替换为:')
         self.regex_case = QCheckBox('区分大小写')
         self.regex_case.setChecked(True)
