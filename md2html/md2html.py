@@ -31,7 +31,6 @@ def batch_convert_to_typora_html(input_dir, output_dir, local_asset_dir="css_js"
         'clipboard.min.js': 'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js',
     }
     
-    # This part is identical to your working script
     before_body_content = '<main class="markdown-body">'
     after_body_content = """
 </main>
@@ -93,27 +92,24 @@ def batch_convert_to_typora_html(input_dir, output_dir, local_asset_dir="css_js"
             output_file_path = os.path.join(output_dir, base_name + ".html")
             print(f"正在转换: {filename} ...")
             try:
-                # --- Final, robust Pandoc command ---
+                # <-- *** 这是本次最关键的改动 ***
                 command_str = (
-                    # 1. Add --self-contained to embed images and other resources
-                    # 2. Add --resource-path to tell Pandoc where to find local images
                     f'pandoc --self-contained '
                     f'--resource-path="{os.path.abspath(input_dir)}" '
-                    # --- The rest is your working command structure ---
-                    f'-f commonmark+pipe_tables+tex_math_dollars -t html5 --standalone --mathjax '
+                    f'-f commonmark+pipe_tables+tex_math_dollars '
+                    f'-t html5 --standalone --mathjax '
+                    f'--no-highlight ' # <-- 关键：禁用 Pandoc 的内置高亮
                     f'--metadata title="{base_name}" '
-                    # These CSS and JS files are now relative to the *output* directory
-                    f'--css "github-markdown.css" '
-                    f'--css "hljs_style.css" '
-                    f'--css "custom.css" '
+                    f'--css "github-markdown.css" --css "hljs_style.css" --css "custom.css" '
                     f'--include-before-body "{os.path.abspath(before_body_file)}" '
                     f'--include-after-body "{os.path.abspath(after_body_file)}" '
                     f'-o "{os.path.abspath(output_file_path)}" "{os.path.abspath(input_file_path)}"'
                 )
                 
-                # Execute from the output directory to make relative paths for CSS/JS work
+                # We need to execute from the output directory so pandoc can find the linked css/js for embedding
                 subprocess.run(command_str, shell=True, check=True, capture_output=True, text=True, encoding='utf-8', cwd=output_dir)
-                print(f"  -> 成功生成自包含的 HTML: {os.path.basename(output_file_path)}")
+                
+                print(f"  -> 成功转换为 {os.path.basename(output_file_path)}")
 
             except FileNotFoundError: print("错误：'pandoc' 命令未找到。"); return
             except subprocess.CalledProcessError as e: print(f"  -> Pandoc 转换失败: {e.stderr}")
