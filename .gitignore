@@ -7,3 +7,8 @@
 ai.py
 config.py
 !package.bat
+
+# 放行 html_output 目录下的 CSS 和 JS 资源
+!md2html/css_js/*
+
+html_output/leetcode.md
