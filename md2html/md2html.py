@@ -31,7 +31,7 @@ def batch_convert_to_typora_html(input_dir, output_dir, local_asset_dir="css_js"
         'clipboard.min.js': 'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js',
     }
     
-    # --- 准备需要注入的 HTML 和 JS 代码 ---
+    # This part is identical to your working script
     before_body_content = '<main class="markdown-body">'
     after_body_content = """
 </main>
@@ -63,7 +63,6 @@ def batch_convert_to_typora_html(input_dir, output_dir, local_asset_dir="css_js"
     }, 100);
 </script>
 """
-    # 将它们写入临时文件
     before_body_file = os.path.join(output_dir, 'before_body.html')
     after_body_file = os.path.join(output_dir, 'after_body.html')
     with open(before_body_file, 'w', encoding='utf-8') as f: f.write(before_body_content)
@@ -73,19 +72,18 @@ def batch_convert_to_typora_html(input_dir, output_dir, local_asset_dir="css_js"
     local_assets_exist = os.path.isdir(local_asset_dir)
     if local_assets_exist: print(f"发现本地资源目录 '{local_asset_dir}'，将优先使用。")
 
-    all_assets = {**assets, 'custom.css': ''} # Add custom.css for processing
+    all_assets = {**assets, 'custom.css': ''}
     for filename, url in all_assets.items():
         output_path = os.path.join(output_dir, filename)
         local_path = os.path.join(local_asset_dir, filename)
         if local_assets_exist and os.path.exists(local_path):
             print(f"从 '{local_asset_dir}' 复制 '{filename}'...")
             shutil.copy(local_path, output_path)
-        elif url: # Only download if there's a URL
+        elif url:
             if not download_asset(url, output_dir, filename):
                 print("程序中止。"); return
         elif filename == 'custom.css':
              print(f"警告：未在 '{local_asset_dir}' 中找到 'custom.css'。")
-
 
     print("\n--- 开始转换 Markdown 文件 ---")
     for filename in os.listdir(input_dir):
@@ -95,24 +93,27 @@ def batch_convert_to_typora_html(input_dir, output_dir, local_asset_dir="css_js"
             output_file_path = os.path.join(output_dir, base_name + ".html")
             print(f"正在转换: {filename} ...")
             try:
-                command = [
-                    'pandoc',
-                    '-f', 'commonmark+tex_math_dollars',
-                    '-t', 'html5',
-                    '--standalone',
-                    '--mathjax',
-                    '--metadata', f'title={base_name}',
-                    '--css', 'github-markdown.css',
-                    '--css', 'hljs_style.css',
-                    '--css', 'custom.css',
-                    '--include-before-body', f'"{before_body_file}"',
-                    '--include-after-body', f'"{after_body_file}"',
-                    '-o', f'"{output_file_path}"',
-                    f'"{input_file_path}"'
-                ]
+                # --- Final, robust Pandoc command ---
+                command_str = (
+                    # 1. Add --self-contained to embed images and other resources
+                    # 2. Add --resource-path to tell Pandoc where to find local images
+                    f'pandoc --self-contained '
+                    f'--resource-path="{os.path.abspath(input_dir)}" '
+                    # --- The rest is your working command structure ---
+                    f'-f commonmark+pipe_tables+tex_math_dollars -t html5 --standalone --mathjax '
+                    f'--metadata title="{base_name}" '
+                    # These CSS and JS files are now relative to the *output* directory
+                    f'--css "github-markdown.css" '
+                    f'--css "hljs_style.css" '
+                    f'--css "custom.css" '
+                    f'--include-before-body "{os.path.abspath(before_body_file)}" '
+                    f'--include-after-body "{os.path.abspath(after_body_file)}" '
+                    f'-o "{os.path.abspath(output_file_path)}" "{os.path.abspath(input_file_path)}"'
+                )
                 
-                subprocess.run(" ".join(command), shell=True, check=True, capture_output=True, text=True, encoding='utf-8')
-                print(f"  -> 成功转换为 {os.path.basename(output_file_path)}")
+                # Execute from the output directory to make relative paths for CSS/JS work
+                subprocess.run(command_str, shell=True, check=True, capture_output=True, text=True, encoding='utf-8', cwd=output_dir)
+                print(f"  -> 成功生成自包含的 HTML: {os.path.basename(output_file_path)}")
 
             except FileNotFoundError: print("错误：'pandoc' 命令未找到。"); return
             except subprocess.CalledProcessError as e: print(f"  -> Pandoc 转换失败: {e.stderr}")
